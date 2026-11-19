@@ -23,10 +23,15 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Preparar Android SDK
+      - name: Preparar Android SDK, NDK y CMake
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" --licenses || true
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" \
+            "platform-tools" \
+            "platforms;android-36" \
+            "build-tools;36.0.0" \
+            "ndk;27.2.12479018" \
+            "cmake;3.22.1"
 
       - name: Preparar Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -37,29 +42,6 @@ jobs:
         run: |
           unzip -q UMC22-LIVE-MIXER-GitHub-Starter.zip
           cp -a UMC22-LIVE-MIXER/. .
-
-      - name: Corregir compatibilidad Java y Kotlin
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path("app/build.gradle.kts")
-          s = p.read_text()
-          s = s.replace(
-              '    targetSdk = 36\n',
-              '''    targetSdk = 36
-
-              compileOptions {
-                  sourceCompatibility = JavaVersion.VERSION_17
-                  targetCompatibility = JavaVersion.VERSION_17
-              }
-
-              kotlinOptions {
-                  jvmTarget = "17"
-              }
-          '''
-          )
-          p.write_text(s)
-          PY
 
       - name: Compilar APK
         run: gradle --no-daemon assembleDebug
