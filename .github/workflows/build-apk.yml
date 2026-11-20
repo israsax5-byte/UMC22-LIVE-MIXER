@@ -37,6 +37,18 @@ jobs:
         with:
           gradle-version: '8.11.1'
 
+      - name: Extraer proyecto
+        run: |
+          mkdir -p extracted
+          unzip -q UMC22-LIVE-MIXER-GitHub-Starter.zip -d extracted
+          PROJECT_DIR=$(find extracted -type f \( -name settings.gradle -o -name settings.gradle.kts \) -print -quit | xargs -r dirname)
+          if [ -z "$PROJECT_DIR" ]; then
+            echo "No se encontró settings.gradle en el ZIP"
+            find extracted -maxdepth 5 -type f
+            exit 1
+          fi
+          cp -a "$PROJECT_DIR"/. .
+
       - name: Compilar APK
         run: gradle --no-daemon assembleDebug
 
